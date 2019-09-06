@@ -174,3 +174,18 @@ def find_half_cycles(t, volt, lower_threshold, upper_threshold, midpoint_window_
     return half_cycle_mask_list
 
 
+def unwrap(x,discont=10):
+    """
+    Unwrap x values.
+    """
+    adjval = 0
+    x_unwrap = np.zeros(x.shape)
+    x_unwrap[0] = x[0]
+    for i in range(1,x.shape[0]):
+        dx = x[i] + adjval - x_unwrap[i-1]
+        if dx < -0.5*discont:
+            adjval += discont
+        if dx > 0.5*discont:
+            adjval -= discont
+        x_unwrap[i] = x[i] + adjval
+    return x_unwrap
