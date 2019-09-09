@@ -8,13 +8,25 @@ import stimulus_position_utils
 #volt = np.load('voltage_downsample.npy')
 #volt = np.load('voltage.npy')
 #volt = np.load('test_volt.npy')
-volt = np.load('pos_rear.npy')
-volt = stimulus_position_utils.unwrap(volt)
+volt_raw = np.load('pos_rear.npy')
+volt = stimulus_position_utils.unwrap(volt_raw)
 
 # Create index and time arrays
 sample_rate = 10000.0
 ind = np.arange(volt.shape[0])
 t = ind/sample_rate
+
+plt.subplot(211)
+plt.plot(t,volt_raw)
+plt.ylabel('original (V)')
+plt.grid(True)
+
+plt.subplot(212)
+plt.plot(t,volt)
+plt.xlabel('time (s)')
+plt.ylabel('unwrapped (V)')
+plt.grid(True)
+plt.show()
 
 # Parameters for finding cycles
 #lower_threshold=0.1          # lower threshold for finding half cycles
