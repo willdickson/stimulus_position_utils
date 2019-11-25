@@ -2,7 +2,7 @@ from __future__ import print_function
 import numpy as np
 
 
-def get_masks(
+def get_masks_from_triangle_wave(
         t,                            # array of time points
         volt,                         # array of stimulus voltage values
         lower_threshold=0.1,          # lower threshold for finding half cycles
@@ -76,6 +76,58 @@ def get_masks(
     mask_dict = {
             'pretrial'         : pretrial_mask,
             'trial'            : trial_mask,
+            'cycles'           : full_cycle_mask_list,
+            'half_cycles'      : half_cycle_mask_list,
+            'even_half_cycles' : even_half_cycle_mask_list,
+            'odd_half_cycles'  : odd_half_cycle_mask_list,
+            }
+    return mask_dict
+
+
+def get_masks_from_square_wave(volt, threshold=0.0):
+    """
+    Get masks for full and half cycles based on the stimulus voltage.  
+
+    Expects a squarewave type stimulus voltage.  The half cycles are identified
+    by finding the thredshold crossings.  Each contiguous such region is
+    considered to be a half cycle. The half cycles are then used to find the
+    full cycles, pretrial region , etc.    
+
+    Returns: mask_dict = a dictionary masks created from the stimulus voltage
+    with the following keys.
+
+    cycles              = list of masks for each cycle in the data
+    half_cycles         = list of masks for each half cycle in the data
+    even_half_cycles    = list of masks for each even half cycle in the data
+    odd_half_cycles     = list of masks for eac odd half cycle in the data 
+
+    """
+    ind = np.arange(volt.shape[0])
+    mask_pos = volt >  threshold 
+    mask_neg = volt <= threshold 
+
+    pos_regions = find_contiguous_regions(mask_pos,True)
+    neg_regions = find_contiguous_regions(mask_neg,True)
+
+    first_pos_ind = ind[mask_pos][0]
+    first_neg_ind = ind[mask_neg][0]
+
+    if (first_pos_ind < first_neg_ind):
+        even_half_cycle_mask_list = pos_regions
+        odd_half_cycle_mask_list  = neg_regions
+    else:
+        even_half_cycle_mask_list = neg_regions
+        odd_half_cycle_mask_list  = pos_regions
+
+    half_cycle_mask_list = []
+    full_cycle_mask_list = []
+    for even_mask, odd_mask in zip(even_half_cycle_mask_list, odd_half_cycle_mask_list):
+        cycle_mask = np.logical_or(even_mask, odd_mask)
+        half_cycle_mask_list.append(even_mask)
+        half_cycle_mask_list.append(odd_mask)
+        full_cycle_mask_list.append(cycle_mask)
+
+    mask_dict = {
             'cycles'           : full_cycle_mask_list,
             'half_cycles'      : half_cycle_mask_list,
             'even_half_cycles' : even_half_cycle_mask_list,
